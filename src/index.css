@@ -1,0 +1,13 @@
+html {
+    margin: 1rem;
+    font-size: 20pt;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+input {
+    font-size: inherit;
+}

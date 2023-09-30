@@ -1,0 +1,15 @@
+{
+  "name": "puppy-trainer",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "dependencies": {
+    "parcel": "^2.9.3",
+    "encoding-japanese": "^2.0.0",
+    "lodash": "^4.17.21"
+  },
+  "browserslist": [
+    "last 2 versions"
+  ]
+}
