@@ -1,8 +1,6 @@
 import Encoding from 'encoding-japanese';
-const $ = document.querySelector.bind(document);
 
 /*
-FORMAT
 00-2f 48 bytes | file header
     00-0f 16 bytes | [WAN WAN STORY!]
                      (first byte might be set to 0 or this might be an error?)
@@ -21,17 +19,27 @@ FORMAT
 
 70-af 64 bytes | save #2
 b0-ef 64 bytes | save #3
-
 */
 
 const SAVE_FILE_BYTES = 0x2000;
-const SINGLE_SAVE_BYTES = 0x40;
-const SAVE_HEADER_BYTES = 0x30;
+const SINGLE_SAVE_BYTES = 64;
+const SAVE_HEADER_BYTES = 48;
+const STATE_BYTES = 30;
 const NAME_BYTES = 9;
 const SAVE_MARKER_U8 = new Uint8Array([0x5B, 0x57, 0x41, 0x4E, 0x20, 0x57, 0x41, 0x4E, 0x20, 0x53, 0x54, 0x4F, 0x52, 0x59, 0x21, 0x5D]);
+const CHAPTER_GAME_CLEAR = 12;
 
-const STATE_CLEARED_U8 = new Uint8Array(30);
-STATE_CLEARED_U8[0] = 0x0C;
+const $ = document.querySelector.bind(document);
+
+/**
+ * @param chapter chapter 0-12 inclusive, 0 indexed. 0 is new game (chapter 1) 12 is complete (chapter 13)
+ * @param scene not used yet
+ */
+function generateGameState(chapter = 0, scene = 0) {
+    const stateU8 = new Uint8Array(STATE_BYTES);
+    stateU8[0] = chapter & 0xff;
+    return stateU8;
+}
 
 function saveBufferToFile(buffer, filename = 'wanwan.sav') {
     const a = document.createElement('a');
@@ -42,7 +50,6 @@ function saveBufferToFile(buffer, filename = 'wanwan.sav') {
 
 function getNameBytes(saveNum, nameClass) {
     const nameU8 = new Uint8Array(NAME_BYTES);
-    // nameU8.fill(0xff); // makes any difference?
     const $name = $(`.save${saveNum} input.${nameClass}`);
     let name = $name.value;
 
@@ -51,11 +58,9 @@ function getNameBytes(saveNum, nameClass) {
         $name.value = name;
     }
 
-    const nameUnicode = Encoding.stringToCode($name.value);
-    const nameSJIS = Encoding.convert(nameUnicode, {from: 'UNICODE', to: 'SJIS'});
+    const nameSJIS = Encoding.convert(name, {from: 'UNICODE', to: 'SJIS', type: 'arraybuffer'});
     nameU8.set(nameSJIS, 0);
     nameU8.set([0x00], Math.min(nameSJIS.length, nameU8.length - 1));
-    // console.log($name.value, nameUnicode.map(x => x.toString(16)), nameSJIS.map(x => x.toString(16)), nameU8);
     return nameU8;
 }
 
@@ -77,8 +82,8 @@ $('#go').addEventListener('click', (e) => {
     saveBufferU8.fill(0xff, 0, SAVE_HEADER_BYTES);
     saveBufferU8.set(SAVE_MARKER_U8, 0);
 
-    const [M, N, S] = [SAVE_MARKER_U8.byteLength, NAME_BYTES, STATE_CLEARED_U8.byteLength];
-    console.assert(SINGLE_SAVE_BYTES === M + 2*N + S);
+    const [M, N, S] = [SAVE_MARKER_U8.byteLength, NAME_BYTES, STATE_BYTES];
+    console.assert(SINGLE_SAVE_BYTES === M + 2 * N + S);
 
     for (let saveNum = 0; saveNum < 3; saveNum++) {
         const pos = SAVE_HEADER_BYTES + saveNum * SINGLE_SAVE_BYTES;
@@ -93,7 +98,7 @@ $('#go').addEventListener('click', (e) => {
         saveBufferU8.set(getNameBytes(saveNum, 'dog'), pos + M + N);
 
         // clear game
-        saveBufferU8.set(STATE_CLEARED_U8, pos + M + N + N);
+        saveBufferU8.set(generateGameState(CHAPTER_GAME_CLEAR), pos + M + N + N);
 
         // checksum
         const sum = sumBytes(saveBufferU8, pos, pos + SINGLE_SAVE_BYTES - 2);
