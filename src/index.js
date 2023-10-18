@@ -11,9 +11,7 @@ import Encoding from 'encoding-japanese';
     40-47  9 bytes | <human name in SJIS, 2 bytes per character, up to 4 characters, terminated by 00>
     49-51  9 bytes | <dog name in SJIS, 2 bytes per character, up to 4 characters, terminated by 00>
                      (if not yet set, "？？？？" is used, fullwidth characters, 0x81 0x48 x 4)
-    52-6b 26 bytes |
-                     (game state, initialized to 0s)
-                     (clear game's first byte is 0C)
+    52-6b 26 bytes | <game state, initialized to 00, first byte is chapter number (0-12)>
     6c-6f  4 bytes | <16-bit sum of all 60 single bytes in this save slot up until here (0x30-0x6b)>
                      (possibly 2 bytes, max possible value 3D C2 or 4 bytes max possible 00 00 3C C3, either way only last byte is significant)
 
