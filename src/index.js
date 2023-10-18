@@ -68,7 +68,8 @@ function sumBytes(bufferU8, start, end) {
     return sum;
 }
 
-$('#go').addEventListener('click', () => {
+$('#go').addEventListener('click', (e) => {
+    e.preventDefault();
     const saveBuffer = new ArrayBuffer(SAVE_FILE_BYTES);
     const saveBufferU8 = new Uint8Array(saveBuffer);
 
@@ -101,6 +102,7 @@ $('#go').addEventListener('click', () => {
     }
 
     saveBufferToFile(saveBuffer);
+    return false;
 });
 
 
