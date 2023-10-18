@@ -40,13 +40,6 @@ function generateGameState(chapter = 0, scene = 0) {
     return stateU8;
 }
 
-function saveBufferToFile(buffer, filename = 'wanwan.sav') {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([buffer], {type: 'application/octet-stream'}));
-    a.download = filename;
-    a.click();
-}
-
 function getNameBytes(saveNum, nameClass) {
     const nameU8 = new Uint8Array(NAME_BYTES);
     const $name = $(`.save${saveNum} input.${nameClass}`);
@@ -59,7 +52,9 @@ function getNameBytes(saveNum, nameClass) {
 
     const nameSJIS = Encoding.convert(name, {from: 'UNICODE', to: 'SJIS', type: 'arraybuffer'});
     nameU8.set(nameSJIS, 0);
-    nameU8.set([0x00], Math.min(nameSJIS.length, nameU8.length - 1));
+    // Null-terminate
+    console.assert(nameSJIS.length < NAME_BYTES, 'Name is too long, should be 8 bytes or less');
+    nameU8[nameSJIS.length] = 0;
     return nameU8;
 }
 
@@ -70,6 +65,13 @@ function sumBytes(bufferU8, start, end) {
         sum += bufferU8[i];
     }
     return sum;
+}
+
+function saveBufferToFile(buffer, filename = 'wanwan.sav') {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buffer], {type: 'application/octet-stream'}));
+    a.download = filename;
+    a.click();
 }
 
 $('#go').addEventListener('click', (e) => {
@@ -101,6 +103,7 @@ $('#go').addEventListener('click', (e) => {
 
         // checksum
         const sum = sumBytes(saveBufferU8, pos, pos + SINGLE_SAVE_BYTES - 2);
+        console.assert(sum <= 0xffff && sum >= 0, 'Expected sum to be two bytes');
         saveBufferU8[pos + SINGLE_SAVE_BYTES - 2] = (sum >> 8) & 0xff;
         saveBufferU8[pos + SINGLE_SAVE_BYTES - 1] = sum & 0xff;
     }
