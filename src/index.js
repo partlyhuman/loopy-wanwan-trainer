@@ -37,6 +37,7 @@ const $ = document.querySelector.bind(document);
 function generateGameState(chapter = 0, scene = 0) {
     const stateU8 = new Uint8Array(STATE_BYTES);
     stateU8[0] = chapter & 0xff;
+    stateU8[1] = scene & 0xff;
     return stateU8;
 }
 
